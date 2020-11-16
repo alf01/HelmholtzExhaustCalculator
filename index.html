@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<head>
+    <title>Helmholtz Resonator Calculator</title>
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Roboto&display=swap');
+        
+        body{
+            font-family: 'Roboto', sans-serif;
+        }
+        
+        .lft{
+            float: left;
+        }
+        
+        #areaOfNeckCalc:hover{
+            
+        }
+    </style>
+</head>
+<script>
+    
+    const HeatCapacity = 7/5; //Показатель адиабаты при комнатной температуре  5/3 для одноатомных газов, 7/5 для двухатомных (и для воздуха), 4/3 для многоатомных;
+    const GasConstant =  8.3144598; //Универсальная газовая постоянная 
+    const MolarMass = 29; //грам на моль //молярная масса выхлопного газа, пока есть только воздух //молярная масса воздуха 29 // молярная масса Монооксида углерода CO как выхопных газов 28 но содержание не более 3% в выхлопе //грам на моль молярная масса N2 из коготого на 73% состоит выхлоп 28
+    const Boltzmann = 1.380649 * (Math.pow(10,-23)); //постоянная Больцмана
+    var SoundSpeed = 436 //м/с пока в лом выводить скорость звука  https://tehtab.ru/Guide/GuidePhysics/Sound/SoundSpeedAirTemperature/
+
+             
+    //азот Молярная масса Mi, кг/моль 28,0135 Плотность rc.иi, кг/м3
+
+    
+    function GetF(param)
+    {
+     return   parseFloat(document.getElementById(param).value);
+    }
+   
+    function celsiusToKelvin(celsius) {
+        return celsius + 273.15;
+    }
+    
+    function isInnerType() {
+        return document.getElementById("innerType").checked;
+    }
+    function GetSoundSpeed() {
+        
+        return GetF("soundSpeed");
+        
+        return SoundSpeed;
+        
+        //return Math.sqrt((HeatCapacity * GasConstant * thermodynamicTemperature) / MolarMass)
+        
+        //https://www.fxyz.ru/%D1%84%D0%BE%D1%80%D0%BC%D1%83%D0%BB%D1%8B_%D0%BF%D0%BE_%D1%84%D0%B8%D0%B7%D0%B8%D0%BA%D0%B5/%D0%B0%D0%BA%D1%83%D1%81%D1%82%D0%B8%D0%BA%D0%B0/%D1%80%D0%B0%D1%81%D0%BF%D1%80%D0%BE%D1%81%D1%82%D1%80%D0%B0%D0%BD%D0%B5%D0%BD%D0%B8%D0%B5_%D0%B7%D0%B2%D1%83%D0%BA%D0%B0/%D1%81%D0%BA%D0%BE%D1%80%D0%BE%D1%81%D1%82%D1%8C_%D0%B7%D0%B2%D1%83%D0%BA%D0%B0/%D1%81%D0%BA%D0%BE%D1%80%D0%BE%D1%81%D1%82%D1%8C_%D0%B7%D0%B2%D1%83%D0%BA%D0%B0_%D0%B2_%D0%B3%D0%B0%D0%B7%D0%B0%D1%85/
+        //метры в сек
+        return Math.sqrt((HeatCapacity * GasConstant * thermodynamicTemperature) / MolarMass)
+
+
+        //15 °C	1,404 показатель адиабаты для N2 Азот
+        
+    }
+    
+    function areaOfNeckCalc() {
+        let diameterOfNeck = GetF("diameterOfNeck"); //mm
+        let area = Math.PI * Math.pow(diameterOfNeck / 1000 / 2, 2); //m2
+        document.getElementById("areaOfNeck").value = area;
+    }
+
+
+    function GetMolecularMass() {
+        return (Boltzmann * MolarMass) / GasConstant;
+    }
+
+    //полагаю длины в метрах
+    function GetHertz(soundSpeed, areaOfNeck, volume, lengthOfNeck) {
+       return  (soundSpeed / (2 * Math.PI) ) * Math.sqrt(areaOfNeck / (volume * lengthOfNeck))
+    }
+
+
+ 
+    function Calc()
+    {
+        let areaOfNeck = GetF("areaOfNeck");
+        let volume =GetF("volume");
+        let lengthOfNeck = GetF("lengthOfNeck");
+        
+        let res = GetHertz(GetSoundSpeed(), areaOfNeck, volume, lengthOfNeck);
+
+        document.getElementById("frequency").value = res;
+        
+    }
+
+    function volumeCalc()
+    {
+        let innerDiameterOfResonator = GetF("innerDiameterOfResonator");
+        let lengthOfResonator = GetF("lengthOfResonator");
+        let volume = Math.pow(((innerDiameterOfResonator /2) / 1000),2) * Math.PI * (lengthOfResonator / 1000)
+        if (isInnerType())
+        {        
+            let exhaustPipeThickness = GetF("exhaustPipeThickness");
+            let exhaustPipeDiameter =  GetF("exhaustPipeDiameter");
+            let neckPipeThickness =GetF("neckPipeThickness");
+            let diameterOfNeck =  GetF("diameterOfNeck");
+            let lengthOfNeck =  GetF("lengthOfNeck");
+          //подсчитаем обьем остальных элементов
+            let exhaustVolume = Math.pow(((exhaustPipeDiameter /2) / 1000),2) * Math.PI * (lengthOfResonator / 1000);
+            volume = volume - exhaustVolume;
+            
+            var x1 =  Math.pow((((diameterOfNeck /2) + neckPipeThickness) / 1000),2)
+            let neckVolume =x1  * Math.PI * (lengthOfNeck - (exhaustPipeThickness / 1000));
+            volume = volume - neckVolume;
+        }
+
+        document.getElementById("volume").value = volume;
+    }
+    
+    function lengthOfNeckCalc() {
+
+      if (isInnerType())
+      {
+          for (let i= 0; i< 10; i++)
+          {
+              volumeCalc();
+              _lengthOfNeckCalc();              
+          }
+      }
+      else
+      {
+          _lengthOfNeckCalc();
+      }
+    }
+    
+    function _lengthOfNeckCalc() {
+        let areaOfNeck = GetF("areaOfNeck");
+        let volume = GetF("volume");
+        //  let lengthOfNeck = document.getElementById("lengthOfNeck").value;
+
+        let frequency =   GetF("frequency");
+
+        let soundSpeed = GetSoundSpeed();
+
+        let lengthOfNeck = areaOfNeck /  (Math.pow( frequency /  (soundSpeed / (2 * Math.PI) ) , 2) * volume);
+
+        document.getElementById("lengthOfNeck").value = lengthOfNeck;
+    }
+    
+    function CalcSoundSpeed(){
+        //Скорость звука в газах в широких пределах зависит только от температуры и не зависит от давления газа.
+        let X = 1.396; //120 градусов https://dpva.ru/Guide/GuideMedias/GuideAir/AirSpesificHeatRaitioAtmPressure/
+        let R = 286.9 //GasConstant / GetMolecularMass() ; //Индивидуальная газовая постоянная R′ = R/μ, Дж/(кг·K) — константа для конкретного газа или газовой смеси с молекулярной массой μ.  //Азот, N2	296.8 //Воздух	286.9
+        let T = 120 + 273.15;
+        document.getElementById("soundSpeed").value = Math.sqrt(X * R * T); //м/с
+       
+        //χ = сp / сu — показатель адиабаты,
+        //R — Газовая постоянная (Дж/кг·К),
+        //T — Температура газа (К),
+    }
+
+    document.addEventListener("DOMContentLoaded", function(){
+        
+        
+        console.log("test");
+        console.log(GetSoundSpeed(celsiusToKelvin(200)));
+        console.log(GetMolecularMass());
+    });
+   
+      
+  
+    
+</script>
+<body>
+    <p>Больше объем — шире спектр частот, на которых будет эффект, длиннее горло — более результативное гашение</p>
+
+ 
+    <div>
+        <input type="checkbox" id="innerType" checked="true"/> <span> inner Type </span>
+    </div>
+    <div>      
+        <input type="number" id="exhaustPipeThickness" value="2" /> <span> exhaust Pipe Thickness mm</span>
+    </div>
+    <div>
+        <input type="number" id="exhaustPipeDiameter" value="60" /> <span> outer exhaust Pipe Diameter mm</span>
+    </div>
+    <div>
+        <input type="number" id="neckPipeThickness" value="1.5" /> <span> neck Pipe Thickness mm</span>
+    </div>
+    
+    <div>inner diameter of neck mm</div>
+    <div>
+        <input type="number" id="diameterOfNeck" value="13" /><!-- 0.000314--> 
+    </div>
+
+    <div>inner diameter of resonator mm <span>, should be greater than outer exhaust Pipe Diameter</span> </div>
+    <div>
+        <input type="number" id="innerDiameterOfResonator" value="125" /><!-- 0.000314-->
+    </div>
+
+    <div>inner resonator length  mm</div>
+    <div>
+        <input type="number" id="lengthOfResonator" value="350" /><!-- 0.000314-->
+    </div>
+    
+    <div>inner areaOfNeck m<sup>2</sup></div>
+    <div>      
+        <input type="number" id="areaOfNeck" value="0.00013273228961416876" /><!-- 0.000314-->  <input type="button" id="areaOfNeckCalc" onclick="areaOfNeckCalc()" value="calc" />
+    </div>
+    <div>volume m <sup>3</sup></div>
+    <div>       
+        <input type="number" id="volume" value="0.0040" /> <!-- 0.00091292285328485444515125 -->  <input type="button" onclick="volumeCalc()" value="calc" />
+    </div>
+    <div>lengthOfNeck m</div>
+    <div>       
+        <input type="number" id="lengthOfNeck"  value="0.2"/> <input type="button" onclick="lengthOfNeckCalc()" value="calc" />
+    </div>
+    <div>frequency</div>
+    <div>        
+        <input type="number" id="frequency"  value="83.3"/>  <input type="button" onclick="Calc()" value="Calculate frequency"/>
+    </div>
+
+    <div>soundSpeed</div>
+    <div>     
+        <input type="number" id="soundSpeed"  value="397"/>   <input type="button" onclick="CalcSoundSpeed()" value="Calculate sound speed"/>
+    </div>
+
+ 
+
+</body>
+</html>
